@@ -12,10 +12,10 @@
   };
 
   const FRAME_BY_POSITION = {
-    1: "./assets/wolf-pos-1.png",
-    2: "./assets/wolf-pos-2.png",
-    3: "./assets/wolf-pos-3.png",
-    4: "./assets/wolf-pos-4.png",
+    1: "./assets/wolf-pos-1.webp",
+    2: "./assets/wolf-pos-2.webp",
+    3: "./assets/wolf-pos-3.webp",
+    4: "./assets/wolf-pos-4.webp",
   };
 
   /*
@@ -512,9 +512,9 @@
     ctx.font = "800 24px system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = "rgba(255,255,255,0.9)";
-    ctx.strokeStyle = "rgba(0,0,0,0.35)";
-    ctx.lineWidth = 4;
+    ctx.fillStyle = "#fff35a";
+    ctx.strokeStyle = "rgba(0,0,0,0.82)";
+    ctx.lineWidth = 7;
     ctx.strokeText("ВОЛК", selected.hint.x, selected.hint.y + 58);
     ctx.fillText("ВОЛК", selected.hint.x, selected.hint.y + 58);
     ctx.restore();

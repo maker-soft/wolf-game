@@ -1,0 +1,1157 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <title>Волк ловит яйца</title>
+
+  <!-- Telegram Mini App SDK. В обычном браузере не мешает работе игры. -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #1f2937;
+      --panel2: #273449;
+      --text: #f9fafb;
+      --muted: #cbd5e1;
+      --accent: #fbbf24;
+      --danger: #ef4444;
+      --ok: #22c55e;
+      --blue: #60a5fa;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      background: radial-gradient(circle at top, #374151 0%, var(--bg) 55%, #030712 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      padding: max(14px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom));
+    }
+
+    .app {
+      width: min(100%, 760px);
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: clamp(28px, 7vw, 46px);
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    .title p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 8px;
+    }
+
+    .stat {
+      min-width: 82px;
+      padding: 9px 10px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #334155, #1f2937);
+      border: 1px solid rgba(255, 255, 255, .08);
+      text-align: center;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: .7px;
+      color: var(--muted);
+    }
+
+    .stat-value {
+      margin-top: 3px;
+      font-size: 21px;
+      font-weight: 950;
+    }
+
+    .game-card {
+      position: relative;
+      padding: 12px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, #253047, #151c2d);
+      border: 1px solid rgba(255, 255, 255, .08);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #bde0fe 0%, #e0f2fe 48%, #86efac 49%, #4ade80 100%);
+      border: 1px solid rgba(255, 255, 255, .22);
+      touch-action: none;
+    }
+
+    .panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 15px;
+      padding: 13px 14px;
+      background: var(--accent);
+      color: #111827;
+      font-weight: 900;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(251, 191, 36, .25);
+    }
+
+    button.secondary {
+      color: var(--text);
+      background: #334155;
+      box-shadow: none;
+      border: 1px solid rgba(255, 255, 255, .08);
+    }
+
+    button:active {
+      transform: translateY(1px) scale(.99);
+    }
+
+    .controls {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .control-btn {
+      min-height: 58px;
+      background: #334155;
+      color: var(--text);
+      box-shadow: none;
+      border: 1px solid rgba(255, 255, 255, .09);
+    }
+
+    .hint {
+      margin: 12px 0 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 12px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, .82);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      width: min(100%, 360px);
+      padding: 22px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #334155, #1e293b);
+      border: 1px solid rgba(255, 255, 255, .1);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, .42);
+    }
+
+    .modal h2 {
+      margin: 0 0 8px;
+      font-size: 29px;
+    }
+
+    .modal p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .modal-actions {
+      display: grid;
+      gap: 9px;
+    }
+
+    @media (max-width: 520px) {
+      .header {
+        align-items: flex-start;
+      }
+
+      .stats {
+        flex-direction: column;
+      }
+
+      .stat {
+        min-width: 72px;
+        padding: 8px;
+      }
+
+      .stat-value {
+        font-size: 18px;
+      }
+
+      .control-btn {
+        font-size: 13px;
+        min-height: 54px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <section class="header">
+      <div class="title">
+        <h1>Волк ловит яйца</h1>
+        <p>HTML5-игра для Telegram Mini App / GitHub Pages</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Счёт</div>
+          <div class="stat-value" id="score">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Жизни</div>
+          <div class="stat-value" id="lives">3</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Рекорд</div>
+          <div class="stat-value" id="best">0</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-card">
+      <canvas id="game" width="800" height="600" aria-label="Игровое поле"></canvas>
+
+      <div class="overlay show" id="overlay">
+        <div class="modal">
+          <h2 id="modalTitle">Готовы?</h2>
+          <p id="modalText">Перемещайте волка к нужной корзине и ловите падающие яйца.</p>
+          <div class="modal-actions">
+            <button id="startBtn">Начать игру</button>
+            <button class="secondary" id="closeBtn">Закрыть окно</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <button id="newGameBtn">Новая игра</button>
+      <button class="secondary" id="pauseBtn">Пауза</button>
+    </section>
+
+    <section class="controls">
+      <button class="control-btn" data-pos="topLeft">↖ Верх слева</button>
+      <button class="control-btn" data-pos="topRight">Верх справа ↗</button>
+      <button class="control-btn" data-pos="bottomLeft">↙ Низ слева</button>
+      <button class="control-btn" data-pos="bottomRight">Низ справа ↘</button>
+    </section>
+
+    <p class="hint">
+      Управление: кнопки на экране, касание нужной четверти поля, клавиши Q/E/A/D или стрелки.
+      Чем больше счёт — тем быстрее появляются яйца.
+    </p>
+  </main>
+
+  <script>
+    // =====================================================================
+    // Настройки ассетов
+    // =====================================================================
+    // В архив не включены оригинальные изображения/звуки мультфильма.
+    // Если у вас есть права на свои файлы, положите их в assets и включите флаги ниже.
+    const USE_EXTERNAL_WOLF_IMAGE = false; // true, если добавили assets/wolf.png
+    const USE_EXTERNAL_SOUNDS = false;     // true, если добавили mp3-файлы в assets
+
+    const EXTERNAL_SOUND_PATHS = {
+      start: "assets/sound-start.mp3",
+      catch: "assets/sound-catch.mp3",
+      miss: "assets/sound-miss.mp3",
+      gameover: "assets/sound-gameover.mp3"
+    };
+
+    // =====================================================================
+    // Telegram Mini App
+    // =====================================================================
+    const tg = window.Telegram?.WebApp;
+
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      try {
+        tg.setHeaderColor("#111827");
+        tg.setBackgroundColor("#111827");
+      } catch (_) {}
+    }
+
+    function haptic(type = "light") {
+      try {
+        tg?.HapticFeedback?.impactOccurred(type);
+      } catch (_) {}
+    }
+
+    function notify(type = "success") {
+      try {
+        tg?.HapticFeedback?.notificationOccurred(type);
+      } catch (_) {}
+    }
+
+    // =====================================================================
+    // Игра
+    // =====================================================================
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const scoreEl = document.getElementById("score");
+    const livesEl = document.getElementById("lives");
+    const bestEl = document.getElementById("best");
+
+    const overlayEl = document.getElementById("overlay");
+    const modalTitleEl = document.getElementById("modalTitle");
+    const modalTextEl = document.getElementById("modalText");
+
+    const BEST_KEY = "wolf_eggs_best_v2";
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const positions = {
+      topLeft: {
+        label: "верх слева",
+        wolfX: 335,
+        wolfY: 280,
+        basketX: 260,
+        basketY: 255,
+        eggStart: { x: 78, y: 122 },
+        eggEnd: { x: 250, y: 270 },
+        side: "left"
+      },
+      bottomLeft: {
+        label: "низ слева",
+        wolfX: 335,
+        wolfY: 360,
+        basketX: 260,
+        basketY: 375,
+        eggStart: { x: 78, y: 300 },
+        eggEnd: { x: 250, y: 385 },
+        side: "left"
+      },
+      topRight: {
+        label: "верх справа",
+        wolfX: 465,
+        wolfY: 280,
+        basketX: 540,
+        basketY: 255,
+        eggStart: { x: 722, y: 122 },
+        eggEnd: { x: 550, y: 270 },
+        side: "right"
+      },
+      bottomRight: {
+        label: "низ справа",
+        wolfX: 465,
+        wolfY: 360,
+        basketX: 540,
+        basketY: 375,
+        eggStart: { x: 722, y: 300 },
+        eggEnd: { x: 550, y: 385 },
+        side: "right"
+      }
+    };
+
+    const lanes = Object.keys(positions);
+
+    let wolfPosition = "bottomLeft";
+    let eggs = [];
+    let score = 0;
+    let lives = 3;
+    let best = Number(localStorage.getItem(BEST_KEY) || 0);
+    let running = false;
+    let paused = false;
+    let gameOver = false;
+    let lastTime = 0;
+    let spawnTimer = 0;
+    let missFlash = 0;
+    let audioUnlocked = false;
+    let audioContext = null;
+    let externalSounds = null;
+
+    bestEl.textContent = best;
+
+    const wolfImage = new Image();
+    let wolfImageLoaded = false;
+
+    if (USE_EXTERNAL_WOLF_IMAGE) {
+      wolfImage.src = "assets/wolf.png";
+      wolfImage.onload = () => {
+        wolfImageLoaded = true;
+        draw();
+      };
+      wolfImage.onerror = () => {
+        wolfImageLoaded = false;
+        draw();
+      };
+    }
+
+    if (USE_EXTERNAL_SOUNDS) {
+      externalSounds = {
+        start: new Audio(EXTERNAL_SOUND_PATHS.start),
+        catch: new Audio(EXTERNAL_SOUND_PATHS.catch),
+        miss: new Audio(EXTERNAL_SOUND_PATHS.miss),
+        gameover: new Audio(EXTERNAL_SOUND_PATHS.gameover)
+      };
+
+      Object.values(externalSounds).forEach((sound) => {
+        sound.preload = "auto";
+        sound.volume = 0.65;
+      });
+    }
+
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      audioUnlocked = true;
+
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === "suspended") {
+          audioContext.resume();
+        }
+      } catch (_) {}
+    }
+
+    function playSound(name) {
+      unlockAudio();
+
+      if (USE_EXTERNAL_SOUNDS && externalSounds?.[name]) {
+        const sound = externalSounds[name];
+        sound.currentTime = 0;
+        sound.play().catch(() => playRetroSound(name));
+        return;
+      }
+
+      playRetroSound(name);
+    }
+
+    function playRetroSound(type) {
+      try {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        const now = audioContext.currentTime;
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+
+        if (type === "catch") {
+          oscillator.type = "square";
+          oscillator.frequency.setValueAtTime(650, now);
+          oscillator.frequency.exponentialRampToValueAtTime(980, now + 0.08);
+          gain.gain.setValueAtTime(0.07, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          oscillator.start(now);
+          oscillator.stop(now + 0.13);
+        }
+
+        if (type === "miss") {
+          oscillator.type = "sawtooth";
+          oscillator.frequency.setValueAtTime(260, now);
+          oscillator.frequency.exponentialRampToValueAtTime(90, now + 0.18);
+          gain.gain.setValueAtTime(0.11, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          oscillator.start(now);
+          oscillator.stop(now + 0.23);
+        }
+
+        if (type === "start") {
+          oscillator.type = "square";
+          oscillator.frequency.setValueAtTime(440, now);
+          oscillator.frequency.setValueAtTime(660, now + 0.08);
+          oscillator.frequency.setValueAtTime(880, now + 0.16);
+          gain.gain.setValueAtTime(0.07, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+          oscillator.start(now);
+          oscillator.stop(now + 0.3);
+        }
+
+        if (type === "gameover") {
+          oscillator.type = "triangle";
+          oscillator.frequency.setValueAtTime(320, now);
+          oscillator.frequency.setValueAtTime(220, now + 0.12);
+          oscillator.frequency.setValueAtTime(130, now + 0.26);
+          gain.gain.setValueAtTime(0.11, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+          oscillator.start(now);
+          oscillator.stop(now + 0.48);
+        }
+      } catch (_) {}
+    }
+
+    function resetGame() {
+      wolfPosition = "bottomLeft";
+      eggs = [];
+      score = 0;
+      lives = 3;
+      running = true;
+      paused = false;
+      gameOver = false;
+      lastTime = performance.now();
+      spawnTimer = 0;
+      missFlash = 0;
+      hideOverlay();
+      updateHud();
+      playSound("start");
+      haptic("medium");
+      requestAnimationFrame(loop);
+    }
+
+    function updateHud() {
+      scoreEl.textContent = score;
+      livesEl.textContent = lives;
+      bestEl.textContent = best;
+    }
+
+    function hideOverlay() {
+      overlayEl.classList.remove("show");
+    }
+
+    function showOverlay(title, text, startText = "Новая игра") {
+      modalTitleEl.textContent = title;
+      modalTextEl.textContent = text;
+      document.getElementById("startBtn").textContent = startText;
+      overlayEl.classList.add("show");
+    }
+
+    function setWolfPosition(pos) {
+      if (!positions[pos]) return;
+      wolfPosition = pos;
+      haptic("light");
+    }
+
+    function randomLane() {
+      return lanes[Math.floor(Math.random() * lanes.length)];
+    }
+
+    function spawnEgg() {
+      eggs.push({
+        lane: randomLane(),
+        progress: 0
+      });
+    }
+
+    function eggSpeed() {
+      return 0.00018 + Math.min(score, 120) * 0.0000022;
+    }
+
+    function spawnInterval() {
+      return Math.max(470, 1350 - score * 13);
+    }
+
+    function update(delta) {
+      if (!running || paused || gameOver) return;
+
+      spawnTimer += delta;
+
+      if (spawnTimer >= spawnInterval()) {
+        spawnTimer = 0;
+        spawnEgg();
+      }
+
+      const speed = eggSpeed() * delta;
+      eggs.forEach((egg) => {
+        egg.progress += speed;
+      });
+
+      for (let i = eggs.length - 1; i >= 0; i--) {
+        const egg = eggs[i];
+
+        if (egg.progress >= 1) {
+          if (egg.lane === wolfPosition) {
+            score += 1;
+            best = Math.max(best, score);
+            localStorage.setItem(BEST_KEY, String(best));
+            playSound("catch");
+            haptic("medium");
+          } else {
+            lives -= 1;
+            missFlash = 350;
+            playSound("miss");
+            notify("warning");
+          }
+
+          eggs.splice(i, 1);
+          updateHud();
+
+          if (lives <= 0) {
+            endGame();
+            return;
+          }
+        }
+      }
+
+      if (missFlash > 0) {
+        missFlash -= delta;
+      }
+    }
+
+    function endGame() {
+      gameOver = true;
+      running = false;
+      paused = false;
+      playSound("gameover");
+      notify("error");
+      updateHud();
+      showOverlay("Игра окончена", `Ваш счёт: ${score}. Рекорд: ${best}.`, "Играть ещё раз");
+    }
+
+    function loop(time) {
+      const delta = Math.min(40, time - lastTime);
+      lastTime = time;
+
+      update(delta);
+      draw();
+
+      if (running || paused) {
+        requestAnimationFrame(loop);
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      drawBackground();
+      drawHouses();
+      drawRails();
+      drawEggs();
+      drawWolf();
+      drawForeground();
+
+      if (paused && !gameOver) {
+        drawPause();
+      }
+
+      if (missFlash > 0) {
+        ctx.fillStyle = `rgba(239, 68, 68, ${Math.min(.22, missFlash / 1000)})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+    }
+
+    function drawBackground() {
+      const sky = ctx.createLinearGradient(0, 0, 0, H * .55);
+      sky.addColorStop(0, "#bde0fe");
+      sky.addColorStop(1, "#e0f2fe");
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = "#86efac";
+      ctx.fillRect(0, H * .52, W, H * .48);
+
+      ctx.fillStyle = "#4ade80";
+      ctx.fillRect(0, H * .72, W, H * .28);
+
+      ctx.fillStyle = "rgba(255,255,255,.9)";
+      drawCloud(150, 70, 42);
+      drawCloud(615, 72, 38);
+      drawCloud(420, 48, 28);
+
+      ctx.fillStyle = "#166534";
+      ctx.fillRect(0, 470, W, 8);
+      ctx.fillStyle = "rgba(22, 101, 52, .25)";
+      ctx.fillRect(0, 478, W, 55);
+    }
+
+    function drawCloud(x, y, s) {
+      ctx.beginPath();
+      ctx.arc(x, y, s * .55, 0, Math.PI * 2);
+      ctx.arc(x + s * .42, y - s * .16, s * .46, 0, Math.PI * 2);
+      ctx.arc(x + s * .84, y, s * .55, 0, Math.PI * 2);
+      ctx.arc(x + s * .38, y + s * .18, s * .52, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawHouses() {
+      drawChickenHouse(38, 82, false);
+      drawChickenHouse(638, 82, true);
+      drawChickenHouse(38, 260, false);
+      drawChickenHouse(638, 260, true);
+    }
+
+    function drawChickenHouse(x, y, flip) {
+      ctx.save();
+      ctx.translate(x, y);
+
+      if (flip) {
+        ctx.translate(124, 0);
+        ctx.scale(-1, 1);
+      }
+
+      ctx.fillStyle = "#92400e";
+      roundRect(0, 36, 112, 74, 12);
+      ctx.fill();
+
+      ctx.fillStyle = "#7c2d12";
+      ctx.beginPath();
+      ctx.moveTo(-8, 42);
+      ctx.lineTo(56, 0);
+      ctx.lineTo(120, 42);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#fde68a";
+      roundRect(22, 55, 66, 39, 10);
+      ctx.fill();
+
+      drawChicken(58, 58);
+
+      ctx.fillStyle = "#6b7280";
+      ctx.fillRect(105, 84, 110, 8);
+
+      ctx.restore();
+    }
+
+    function drawChicken(x, y) {
+      ctx.save();
+      ctx.translate(x, y);
+
+      ctx.fillStyle = "#fff7ed";
+      ctx.beginPath();
+      ctx.ellipse(0, 15, 24, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(18, 4, 13, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(15, -9, 5, 0, Math.PI * 2);
+      ctx.arc(21, -10, 5, 0, Math.PI * 2);
+      ctx.arc(27, -7, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#f97316";
+      ctx.beginPath();
+      ctx.moveTo(30, 5);
+      ctx.lineTo(45, 10);
+      ctx.lineTo(30, 15);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#111827";
+      ctx.beginPath();
+      ctx.arc(22, 2, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawRails() {
+      Object.values(positions).forEach((pos) => {
+        const sx = pos.eggStart.x;
+        const sy = pos.eggStart.y;
+        const ex = pos.eggEnd.x;
+        const ey = pos.eggEnd.y;
+
+        ctx.strokeStyle = "rgba(120, 53, 15, .75)";
+        ctx.lineWidth = 6;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(255, 237, 213, .85)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy - 5);
+        ctx.lineTo(ex, ey - 5);
+        ctx.stroke();
+      });
+    }
+
+    function drawEggs() {
+      eggs.forEach((egg) => {
+        const pos = positions[egg.lane];
+        const p = easeInQuad(egg.progress);
+        const x = lerp(pos.eggStart.x, pos.eggEnd.x, p);
+        const y = lerp(pos.eggStart.y, pos.eggEnd.y, p);
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(p * Math.PI * 5);
+
+        ctx.fillStyle = "#fffaf0";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 13, 17, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(120, 113, 108, .55)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.restore();
+      });
+    }
+
+    function drawWolf() {
+      const pos = positions[wolfPosition];
+
+      if (USE_EXTERNAL_WOLF_IMAGE && wolfImageLoaded) {
+        drawWolfImage(pos);
+      } else {
+        drawWolfFallback(pos);
+      }
+    }
+
+    function drawWolfImage(pos) {
+      ctx.save();
+
+      ctx.fillStyle = "rgba(0,0,0,.22)";
+      ctx.beginPath();
+      ctx.ellipse(pos.wolfX, pos.wolfY + 140, 86, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const imgW = 150;
+      const imgH = 210;
+      const imgY = pos.wolfY - 105;
+
+      if (pos.side === "right") {
+        ctx.translate(pos.wolfX, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(wolfImage, -imgW / 2, imgY, imgW, imgH);
+      } else {
+        ctx.drawImage(wolfImage, pos.wolfX - imgW / 2, imgY, imgW, imgH);
+      }
+
+      ctx.restore();
+      drawExternalBasket(pos);
+    }
+
+    function drawWolfFallback(pos) {
+      ctx.save();
+      ctx.translate(pos.wolfX, pos.wolfY);
+
+      ctx.fillStyle = "rgba(0,0,0,.18)";
+      ctx.beginPath();
+      ctx.ellipse(0, 140, 82, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#1f2937";
+      ctx.lineWidth = 18;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-26, 78);
+      ctx.lineTo(-48, 130);
+      ctx.moveTo(25, 78);
+      ctx.lineTo(48, 130);
+      ctx.stroke();
+
+      ctx.fillStyle = "#475569";
+      ctx.beginPath();
+      ctx.ellipse(0, 32, 50, 68, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#f8fafc";
+      ctx.beginPath();
+      ctx.ellipse(0, 45, 36, 48, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#64748b";
+      ctx.beginPath();
+      ctx.ellipse(0, -52, 40, 34, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#475569";
+      ctx.beginPath();
+      ctx.moveTo(-28, -75);
+      ctx.lineTo(-46, -116);
+      ctx.lineTo(-12, -82);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(22, -76);
+      ctx.lineTo(40, -114);
+      ctx.lineTo(48, -68);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#e5e7eb";
+      ctx.beginPath();
+      ctx.ellipse(8, -42, 31, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#111827";
+      ctx.beginPath();
+      ctx.arc(31, -44, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#111827";
+      ctx.beginPath();
+      ctx.arc(-12, -58, 3.5, 0, Math.PI * 2);
+      ctx.arc(12, -59, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (pos.side === "left") {
+        drawArmAndBasket(-28, 20, -95, pos.basketY - pos.wolfY);
+      } else {
+        drawArmAndBasket(28, 20, 95, pos.basketY - pos.wolfY);
+      }
+
+      ctx.restore();
+    }
+
+    function drawArmAndBasket(startX, startY, endX, endY) {
+      ctx.strokeStyle = "#475569";
+      ctx.lineWidth = 16;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX * .62, endY * .72);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#334155";
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(endX * .62, endY * .72);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+
+      drawBasketLocal(endX, endY);
+    }
+
+    function drawBasketLocal(x, y) {
+      ctx.save();
+      ctx.translate(x, y);
+      drawBasketShape();
+      ctx.restore();
+    }
+
+    function drawExternalBasket(pos) {
+      ctx.save();
+      ctx.translate(pos.basketX, pos.basketY);
+      ctx.rotate(pos.side === "left" ? -0.12 : 0.12);
+      drawBasketShape();
+      ctx.restore();
+    }
+
+    function drawBasketShape() {
+      ctx.fillStyle = "#a16207";
+      ctx.strokeStyle = "#713f12";
+      ctx.lineWidth = 4;
+
+      ctx.beginPath();
+      ctx.moveTo(-42, -14);
+      ctx.lineTo(42, -14);
+      ctx.lineTo(30, 30);
+      ctx.lineTo(-30, 30);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(254, 243, 199, .65)";
+      ctx.lineWidth = 3;
+
+      for (let i = -24; i <= 24; i += 16) {
+        ctx.beginPath();
+        ctx.moveTo(i, -12);
+        ctx.lineTo(i * .7, 26);
+        ctx.stroke();
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(-35, 6);
+      ctx.lineTo(35, 6);
+      ctx.stroke();
+    }
+
+    function drawForeground() {
+      ctx.fillStyle = "rgba(255,255,255,.86)";
+      roundRect(18, 18, 178, 38, 12);
+      ctx.fill();
+
+      ctx.fillStyle = "#111827";
+      ctx.font = "900 17px system-ui";
+      ctx.fillText(`Скорость: ${Math.min(10, 1 + Math.floor(score / 12))}`, 34, 43);
+
+      ctx.fillStyle = "rgba(255,255,255,.86)";
+      roundRect(606, 18, 176, 38, 12);
+      ctx.fill();
+
+      ctx.fillStyle = "#111827";
+      ctx.font = "900 17px system-ui";
+      ctx.fillText(`Позиция: ${positions[wolfPosition].label}`, 621, 43);
+    }
+
+    function drawPause() {
+      ctx.fillStyle = "rgba(15, 23, 42, .68)";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = "#fff";
+      ctx.font = "950 46px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText("Пауза", W / 2, H / 2 - 12);
+
+      ctx.font = "600 18px system-ui";
+      ctx.fillStyle = "#cbd5e1";
+      ctx.fillText("Нажмите «Пауза», чтобы продолжить", W / 2, H / 2 + 28);
+      ctx.textAlign = "left";
+    }
+
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function easeInQuad(t) {
+      return t * t;
+    }
+
+    function togglePause() {
+      if (gameOver || !running) return;
+
+      paused = !paused;
+      document.getElementById("pauseBtn").textContent = paused ? "Продолжить" : "Пауза";
+
+      if (!paused) {
+        lastTime = performance.now();
+        requestAnimationFrame(loop);
+      } else {
+        draw();
+      }
+    }
+
+    document.getElementById("startBtn").addEventListener("click", resetGame);
+    document.getElementById("newGameBtn").addEventListener("click", resetGame);
+    document.getElementById("pauseBtn").addEventListener("click", togglePause);
+
+    document.getElementById("closeBtn").addEventListener("click", () => {
+      hideOverlay();
+      if (!running && !gameOver) {
+        draw();
+      }
+    });
+
+    document.querySelectorAll("[data-pos]").forEach((button) => {
+      button.addEventListener("click", () => {
+        setWolfPosition(button.dataset.pos);
+        draw();
+      });
+    });
+
+    document.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+
+      const map = {
+        q: "topLeft",
+        e: "topRight",
+        a: "bottomLeft",
+        d: "bottomRight"
+      };
+
+      if (map[key]) {
+        setWolfPosition(map[key]);
+        draw();
+      }
+
+      if (event.key === "ArrowLeft") {
+        const current = positions[wolfPosition];
+        setWolfPosition(current.side === "left" ? wolfPosition : wolfPosition.replace("Right", "Left"));
+        draw();
+      }
+
+      if (event.key === "ArrowRight") {
+        const current = positions[wolfPosition];
+        setWolfPosition(current.side === "right" ? wolfPosition : wolfPosition.replace("Left", "Right"));
+        draw();
+      }
+
+      if (event.key === "ArrowUp") {
+        setWolfPosition(wolfPosition.includes("Left") ? "topLeft" : "topRight");
+        draw();
+      }
+
+      if (event.key === "ArrowDown") {
+        setWolfPosition(wolfPosition.includes("Left") ? "bottomLeft" : "bottomRight");
+        draw();
+      }
+
+      if (event.code === "Space") {
+        event.preventDefault();
+        togglePause();
+      }
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      unlockAudio();
+      const rect = canvas.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width;
+      const y = (event.clientY - rect.top) / rect.height;
+
+      if (x < 0.5 && y < 0.5) setWolfPosition("topLeft");
+      if (x >= 0.5 && y < 0.5) setWolfPosition("topRight");
+      if (x < 0.5 && y >= 0.5) setWolfPosition("bottomLeft");
+      if (x >= 0.5 && y >= 0.5) setWolfPosition("bottomRight");
+
+      draw();
+    });
+
+    draw();
+  </script>
+</body>
+</html>

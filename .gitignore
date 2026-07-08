@@ -1,5 +1,11 @@
+# macOS / Windows
 .DS_Store
 Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
 *.log
-node_modules/
-dist/

@@ -18,12 +18,12 @@ async function openOffline(page, context, path = "/wolf-game/") {
   await ready(page);
 }
 
-test("cold offline launch, all four local frames, sound preferences", async ({ page, context }) => {
+test("cold offline launch, all four local frames, sound preferences", async ({ page, context, baseURL }) => {
   const errors = [];
   const external = [];
   page.on("pageerror", (error) => errors.push(error.message));
   context.on("request", (request) => {
-    if (new URL(request.url()).origin !== "http://localhost:4173") external.push(request.url());
+    if (new URL(request.url()).origin !== baseURL) external.push(request.url());
   });
   await openOffline(page, context);
   await expect(page.locator("#volume")).toHaveValue("55");

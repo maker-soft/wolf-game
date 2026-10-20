@@ -600,7 +600,8 @@
   }
 
   function eventToGamePoint(event) {
-    const rect = els.stage.getBoundingClientRect();
+    // Use the rendered canvas, excluding the stage border, at every scale.
+    const rect = els.canvas.getBoundingClientRect();
     const clientX = event.clientX ?? event.touches?.[0]?.clientX;
     const clientY = event.clientY ?? event.touches?.[0]?.clientY;
 

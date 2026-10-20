@@ -6,6 +6,15 @@
   --accent: #ffd34d;
   --accent-2: #ff5b2e;
   --white: #ffffff;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --viewport-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  :root { --viewport-height: 100dvh; }
 }
 
 * {
@@ -148,7 +157,7 @@ input {
 }
 
 .background {
-  object-fit: cover;
+  object-fit: contain;
   pointer-events: none;
 }
 
@@ -232,33 +241,6 @@ input {
   }
 }
 
-@media (orientation: landscape) and (max-height: 560px) {
-  .app {
-    align-items: start;
-    padding: max(5px, env(safe-area-inset-top)) max(5px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(5px, env(safe-area-inset-left));
-  }
-
-  .game-card {
-    width: min(100%, calc((100dvh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 1448 / 1086));
-  }
-
-  .hud {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    min-height: 54px;
-    padding: 5px;
-  }
-
-  .hud-block,
-  .sound-panel {
-    min-height: 40px;
-  }
-
-  .sound-panel { grid-column: 1 / -1; }
-  .hud strong { font-size: 18px; }
-  .hud-label { font-size: 9px; }
-  .hud-block { padding: 3px 5px; }
-}
-
 .sound-panel {
   grid-template-columns: auto 42px 1fr;
 }
@@ -311,4 +293,53 @@ input {
   color: #fff6c7;
   opacity: 1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+}
+
+/* Use the whole safe viewport in landscape, in Safari and installed PWAs.
+   The original 4:3 art stays intact; extra width becomes side margins. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .app {
+    height: var(--viewport-height);
+    min-height: 0;
+    padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+    align-items: center;
+  }
+
+  .game-card {
+    width: min(100%, calc((var(--viewport-height) - var(--safe-top) - var(--safe-bottom) - 32px) * 4 / 3));
+    grid-template-rows: 28px auto;
+    gap: 4px;
+  }
+
+  .hud {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    height: 28px;
+    gap: 0;
+    padding: 0;
+    border-radius: 6px;
+  }
+
+  .hud-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    gap: 5px;
+    padding: 0 4px;
+    border-radius: 0;
+    background: none;
+  }
+
+  .hud-block + .hud-block { border-left: 1px solid rgba(255, 255, 255, 0.3); }
+  .hud-label { font-size: 10px; letter-spacing: 0; }
+  .hud strong { font-size: 16px; letter-spacing: 0; }
+  .sound-panel, .offline-panel { display: none; }
+
+  .stage {
+    min-width: 0;
+    border: 0;
+    border-radius: 0;
+  }
 }

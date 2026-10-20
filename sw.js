@@ -1,6 +1,6 @@
 /* Generated as sw.js by npm run build. Updates activate after old tabs close. */
 "use strict";
-const VERSION = "acdd25a7d6e6c82aca6f";
+const VERSION = "611c3f58cbc0e7f19f9b";
 const FILES = [
   "./index.html",
   "./styles.css",

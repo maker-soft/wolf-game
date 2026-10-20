@@ -312,7 +312,7 @@ input {
   }
 
   .hud {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 1.25fr);
     height: 28px;
     gap: 0;
     padding: 0;
@@ -333,8 +333,9 @@ input {
   }
 
   .hud-block + .hud-block { border-left: 1px solid rgba(255, 255, 255, 0.3); }
-  .hud-label { font-size: 10px; letter-spacing: 0; }
-  .hud strong { font-size: 16px; letter-spacing: 0; }
+  .hud-label { font-size: 10px; letter-spacing: 0; white-space: nowrap; }
+  .hud strong { font-size: 16px; letter-spacing: 0; white-space: nowrap; }
+  #lives { font-size: 14px; }
   .sound-panel, .offline-panel { display: none; }
 
   .stage {

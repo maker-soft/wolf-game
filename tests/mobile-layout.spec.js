@@ -35,10 +35,16 @@ async function checkLayout(page, viewport, safe = { top: 0, right: 0, bottom: 0,
       const r = node.getBoundingClientRect();
       const label = node.querySelector(".hud-label").getBoundingClientRect();
       const value = node.querySelector("strong").getBoundingClientRect();
-      return { y: r.y, labelY: label.y, valueY: value.y };
+      return { y: r.y, labelY: label.y, valueY: value.y, valueHeight: value.height,
+        left: r.left, right: r.right, labelLeft: label.left, valueRight: value.right };
     }));
     expect(new Set(blocks.map((b) => b.y)).size).toBe(1);
-    for (const block of blocks) expect(Math.abs(block.labelY - block.valueY)).toBeLessThan(8);
+    for (const block of blocks) {
+      expect(Math.abs(block.labelY - block.valueY)).toBeLessThan(8);
+      expect(block.valueHeight).toBeLessThanOrEqual(22);
+      expect(block.labelLeft).toBeGreaterThanOrEqual(block.left);
+      expect(block.valueRight).toBeLessThanOrEqual(block.right);
+    }
     const availableHeight = viewport.height - safe.top - safe.bottom - hud.height - 4;
     const largestHeight = Math.min(availableHeight, (viewport.width - safe.left - safe.right) * 3 / 4);
     expect(stage.height).toBeGreaterThanOrEqual(largestHeight - 2);

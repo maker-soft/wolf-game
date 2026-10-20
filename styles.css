@@ -232,33 +232,6 @@ input {
   }
 }
 
-@media (orientation: landscape) and (max-height: 560px) {
-  .app {
-    align-items: start;
-    padding: max(5px, env(safe-area-inset-top)) max(5px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(5px, env(safe-area-inset-left));
-  }
-
-  .game-card {
-    width: min(100%, calc((100dvh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 1448 / 1086));
-  }
-
-  .hud {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    min-height: 54px;
-    padding: 5px;
-  }
-
-  .hud-block,
-  .sound-panel {
-    min-height: 40px;
-  }
-
-  .sound-panel { grid-column: 1 / -1; }
-  .hud strong { font-size: 18px; }
-  .hud-label { font-size: 9px; }
-  .hud-block { padding: 3px 5px; }
-}
-
 .sound-panel {
   grid-template-columns: auto 42px 1fr;
 }
@@ -311,4 +284,66 @@ input {
   color: #fff6c7;
   opacity: 1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+}
+
+/* Landscape: reserve the full safe height for the original 4:3 game artwork.
+   Controls and installation help use the remaining width beside it. */
+@media (orientation: landscape) and (max-height: 700px) {
+  .app {
+    --landscape-height: calc(100dvh - max(5px, env(safe-area-inset-top)) - max(5px, env(safe-area-inset-bottom)));
+    height: 100dvh;
+    min-height: 0;
+    padding: max(5px, env(safe-area-inset-top)) max(5px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(5px, env(safe-area-inset-left));
+  }
+
+  .game-card {
+    width: 100%;
+    height: var(--landscape-height);
+    min-height: 0;
+    grid-template-columns: minmax(140px, 1fr) minmax(0, calc(var(--landscape-height) * 4 / 3));
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+
+  .stage {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+    aspect-ratio: 4 / 3;
+    border-radius: 12px;
+  }
+
+  .hud {
+    grid-column: 1;
+    grid-row: 1;
+    min-height: 0;
+    height: 100%;
+    overflow: auto;
+    align-content: start;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 5px;
+    gap: 5px;
+  }
+  .hud-block { min-height: 40px; padding: 3px; }
+  .hud strong { font-size: 18px; }
+  .hud-label { font-size: 9px; letter-spacing: 0; }
+  .sound-panel {
+    grid-column: 1 / -1;
+    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    gap: 6px;
+    padding: 5px;
+  }
+  .pause-toggle { grid-column: 1 / -1; grid-row: 1; }
+  .sound-toggle { grid-column: 1; grid-row: 2; }
+  .volume-label { grid-column: 2; grid-row: 2; font-size: 9px; }
+  .volume { grid-column: 1 / -1; grid-row: 3; min-width: 0; }
+
+  .offline-panel {
+    grid-column: 1;
+    grid-row: 2;
+    min-height: 0;
+    max-height: 40dvh;
+    overflow: auto;
+  }
 }

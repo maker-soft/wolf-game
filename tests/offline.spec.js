@@ -75,16 +75,32 @@ test("offline catching, level, pause, misses, game over and restart", async ({ p
 
 test("root installation and mobile portrait/landscape layout", async ({ page, context }) => {
   await openOffline(page, context, "/");
-  for (const viewport of [{ width: 320, height: 568 }, { width: 844, height: 390 }, { width: 667, height: 375 }]) {
+  for (const viewport of [{ width: 320, height: 568 }, { width: 844, height: 390 }, { width: 667, height: 375 }, { width: 568, height: 320 }, { width: 932, height: 430 }]) {
     await page.setViewportSize(viewport);
     const stage = await page.locator("#stage").boundingBox();
     expect(stage.x).toBeGreaterThanOrEqual(0);
     expect(stage.y + stage.height).toBeLessThanOrEqual(viewport.height);
     expect(stage.x + stage.width).toBeLessThanOrEqual(viewport.width);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
-    await tapLane(page, 3);
-    await expect(page.locator("#background")).toHaveAttribute("src", "./assets/wolf-pos-3.webp");
+    if (viewport.width > viewport.height) {
+      expect(stage.height).toBeGreaterThanOrEqual(viewport.height - 12);
+      expect(stage.width / stage.height).toBeCloseTo(4 / 3, 2);
+      expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(viewport.height);
+    }
+    for (const lane of [1, 2, 3, 4]) {
+      await tapLane(page, lane);
+      await expect(page.locator("#background")).toHaveAttribute("src", `./assets/wolf-pos-${lane}.webp`);
+    }
   }
+  await page.locator("summary").click();
+  expect((await page.locator("#stage").boundingBox()).height).toBeGreaterThanOrEqual(418);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(430);
+  await page.locator("summary").click();
+  await page.setViewportSize({ width: 320, height: 568 });
+  const portrait = await page.locator("#stage").boundingBox();
+  expect(portrait.width).toBeGreaterThanOrEqual(300);
+  await tapLane(page, 1);
+  await expect(page.locator("#background")).toHaveAttribute("src", "./assets/wolf-pos-1.webp");
 });
 
 test("blocked storage does not break offline gameplay", async ({ page, context }) => {

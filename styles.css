@@ -52,7 +52,7 @@ input {
 .hud {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, minmax(72px, 1fr)) minmax(170px, auto);
+  grid-template-columns: repeat(3, minmax(72px, 1fr)) minmax(260px, auto);
   gap: 8px;
   align-items: center;
   padding: 8px;
@@ -212,7 +212,7 @@ input {
 @media (max-width: 720px) {
   .app {
     align-items: start;
-    padding: 6px;
+    padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
   }
 
   .hud {
@@ -234,14 +234,16 @@ input {
 
 @media (orientation: landscape) and (max-height: 560px) {
   .app {
-    padding: 5px;
+    align-items: start;
+    padding: max(5px, env(safe-area-inset-top)) max(5px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(5px, env(safe-area-inset-left));
   }
 
   .game-card {
-    width: min(100%, calc((100dvh - 70px) * 1448 / 1086));
+    width: min(100%, calc((100dvh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 1448 / 1086));
   }
 
   .hud {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     min-height: 54px;
     padding: 5px;
   }
@@ -250,6 +252,52 @@ input {
   .sound-panel {
     min-height: 40px;
   }
+
+  .sound-panel { grid-column: 1 / -1; }
+  .hud strong { font-size: 18px; }
+  .hud-label { font-size: 9px; }
+  .hud-block { padding: 3px 5px; }
+}
+
+.sound-panel {
+  grid-template-columns: auto 42px 1fr;
+}
+
+.pause-toggle {
+  grid-row: 1 / span 2;
+  min-height: 40px;
+}
+
+.sound-toggle { grid-column: 2; }
+.volume-label, .volume { grid-column: 3; }
+
+.pause-toggle, #installApp {
+  border: 1px solid #ffe96e;
+  border-radius: 10px;
+  padding: 6px 10px;
+  background: #193c50;
+  color: #fffbe8;
+  cursor: pointer;
+}
+.pause-toggle:disabled { opacity: 0.5; cursor: default; }
+
+.offline-panel {
+  order: 1;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #fffbe8;
+}
+.offline-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.offline-panel summary { cursor: pointer; padding: 4px 0; }
+.offline-panel p { margin: 8px 0; max-width: 65ch; }
+
+@media (max-height: 560px), (max-width: 400px) {
+  .message { padding: 8px; }
+  .message-box { padding: 12px; }
+  .message h1 { font-size: 24px; }
+  .message p { font-size: 13px; }
+  .message .small { font-size: 11px; }
+  .hud-block { padding: 5px; }
 }
 
 

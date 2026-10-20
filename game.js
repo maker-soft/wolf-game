@@ -88,12 +88,14 @@
     message: document.getElementById("message"),
     soundToggle: document.getElementById("soundToggle"),
     volume: document.getElementById("volume"),
+    pauseToggle: document.getElementById("pauseToggle"),
   };
 
   const ctx = els.canvas.getContext("2d", { alpha: true });
 
   const state = {
     running: false,
+    paused: false,
     gameOver: false,
     wolfPosition: 1,
     score: 0,
@@ -108,10 +110,17 @@
     missFlash: 0,
   };
 
+  // Storage can be unavailable in private/restricted browsers; gameplay still works.
+  const settings = {
+    get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+    set(key, value) { try { localStorage.setItem(key, value); } catch { /* Session only. */ } },
+  };
+
   class RetroSound {
     constructor() {
-      const savedEnabled = localStorage.getItem("wolfGameSoundEnabled");
-      const savedVolume = Number(localStorage.getItem("wolfGameVolume"));
+      const savedEnabled = settings.get("wolfGameSoundEnabled");
+      const volume = settings.get("wolfGameVolume");
+      const savedVolume = volume === null ? NaN : Number(volume);
 
       this.enabled = savedEnabled === null ? true : savedEnabled === "true";
       this.volume = Number.isFinite(savedVolume) ? Math.min(1, Math.max(0, savedVolume)) : 0.55;
@@ -142,13 +151,13 @@
 
     setEnabled(value) {
       this.enabled = Boolean(value);
-      localStorage.setItem("wolfGameSoundEnabled", String(this.enabled));
+      settings.set("wolfGameSoundEnabled", String(this.enabled));
       this.applyVolume();
     }
 
     setVolume(value) {
       this.volume = Math.min(1, Math.max(0, Number(value)));
-      localStorage.setItem("wolfGameVolume", String(this.volume));
+      settings.set("wolfGameVolume", String(this.volume));
       this.applyVolume();
     }
 
@@ -287,6 +296,9 @@
 
   function resetGame() {
     state.running = true;
+    state.paused = false;
+    els.pauseToggle.disabled = false;
+    els.pauseToggle.textContent = "Пауза";
     state.gameOver = false;
     state.score = 0;
     state.level = 1;
@@ -303,6 +315,7 @@
 
   function finishGame() {
     state.running = false;
+    els.pauseToggle.disabled = true;
     state.gameOver = true;
     sound.gameOver();
     showMessage(
@@ -414,7 +427,7 @@
   }
 
   function update(dt) {
-    if (!state.running) return;
+    if (!state.running || state.paused) return;
 
     state.spawnTimer -= dt;
     if (state.spawnTimer <= 0) {
@@ -616,6 +629,8 @@
 
     if (!state.running) {
       resetGame();
+    } else if (state.paused) {
+      setPaused(false);
     }
 
     setWolfPosition(lane);
@@ -623,6 +638,10 @@
 
   function bindEvents() {
     els.stage.addEventListener("pointerdown", handleStagePointer, { passive: false });
+    els.pauseToggle.addEventListener("click", () => {
+      sound.unlock();
+      setPaused(!state.paused);
+    });
 
     els.soundToggle.addEventListener("click", (event) => {
       event.preventDefault();
@@ -639,12 +658,27 @@
     });
 
     document.addEventListener("visibilitychange", () => {
-      state.lastTime = performance.now();
+      if (document.hidden) setPaused(true);
     });
 
     window.addEventListener("blur", () => {
-      state.lastTime = performance.now();
+      setPaused(true);
     });
+    window.addEventListener("pagehide", () => setPaused(true));
+  }
+
+  function setPaused(paused) {
+    if (!state.running) return;
+    state.paused = paused;
+    state.lastTime = performance.now();
+    els.pauseToggle.textContent = paused ? "Продолжить" : "Пауза";
+    if (paused) {
+      showMessage("Пауза", "Нажмите на курицу или «Продолжить».", "Счёт и жизни сохранены до закрытия игры.");
+      sound.ctx?.suspend().catch(() => {});
+    } else {
+      hideMessage();
+      sound.unlock();
+    }
   }
 
   function init() {

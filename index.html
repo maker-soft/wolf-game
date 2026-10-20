@@ -4,11 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
   <meta name="theme-color" content="#0aa9f6">
-  <meta name="description" content="HTML5 Telegram Mini App игра: волк ловит яйца.">
+  <meta name="description" content="Волк ловит яйца — игра на телефоне без интернета после установки.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./assets/icon-180.png">
+  <link rel="icon" href="./assets/icon-192.png" type="image/png">
   <title>Волк ловит яйца</title>
   <link rel="stylesheet" href="./styles.css">
   <link rel="preload" as="image" href="./assets/wolf-pos-1.webp">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
   <main class="app" id="app">
@@ -28,11 +32,25 @@
         </div>
 
         <div class="sound-panel" aria-label="Управление звуком">
+          <button class="pause-toggle" id="pauseToggle" type="button" disabled>Пауза</button>
           <button class="sound-toggle" id="soundToggle" type="button" aria-label="Включить или выключить звук">🔊</button>
           <label class="volume-label" for="volume">Громкость</label>
           <input id="volume" class="volume" type="range" min="0" max="100" value="55" aria-label="Громкость">
         </div>
       </div>
+      <footer class="offline-panel">
+        <div class="offline-actions">
+          <span id="offlineStatus" role="status">Подготовка к работе без интернета…</span>
+          <button id="installApp" type="button" hidden>Установить</button>
+        </div>
+        <details>
+          <summary>Как установить на телефон</summary>
+          <p>Откройте игру по HTTPS в Chrome (Android) или Safari (iPhone). Дождитесь «Готово к игре без интернета».</p>
+          <p>Android: меню ⋮ → «Установить приложение» / «Добавить на главный экран».</p>
+          <p>iPhone: «Поделиться» → «На экран Домой» → «Открывать как веб-приложение» (если есть) → «Добавить».</p>
+          <p>Откройте значок игры один раз с сетью, дождитесь готовности, затем проверьте запуск в авиарежиме. После этого сеть и компьютер для игры не нужны. Не очищайте данные сайта.</p>
+        </details>
+      </footer>
 
       <div class="stage" id="stage">
         <img class="background" id="background" src="./assets/wolf-pos-1.webp" fetchpriority="high" alt="">
@@ -50,5 +68,6 @@
   </main>
 
   <script src="./game.js"></script>
+  <script src="./offline.js"></script>
 </body>
 </html>
